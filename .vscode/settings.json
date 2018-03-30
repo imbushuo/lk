@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "*.aslc": "c",
+        "target.h": "c",
+        "platform.h": "c"
+    }
+}

@@ -68,7 +68,7 @@ void arch_early_init(void)
 	__asm__ volatile("mcr  p10, 7, %0, c8, c0, 0" :: "r" (val));
 #endif
 
-#if ARM_CPU_CORTEX_A8
+#if ARM_CPU_CORTEX_A8_COLD
 	/* enable the cycle count register */
 	uint32_t en;
 	__asm__ volatile("mrc	p15, 0, %0, c9, c12, 0" : "=r" (en));
