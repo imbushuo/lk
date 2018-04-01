@@ -1269,8 +1269,13 @@ void scm_check_boot_fuses()
 
 bool is_secure_boot_enable()
 {
+	#ifndef CHAINLOADED_UEFI
 	scm_check_boot_fuses();
 	return secure_boot_enabled;
+	#else
+	// Chainloaded device cannot be trusted
+	return false;
+	#endif
 }
 
 static uint32_t scm_io_read(addr_t address)

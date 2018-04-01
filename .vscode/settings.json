@@ -2,6 +2,8 @@
     "files.associations": {
         "*.aslc": "c",
         "target.h": "c",
-        "platform.h": "c"
+        "platform.h": "c",
+        "panel_sharp_wqxga_dualdsi_video.h": "c",
+        "mdss_hdmi.h": "c"
     }
 }

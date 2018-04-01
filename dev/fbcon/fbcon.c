@@ -74,6 +74,16 @@ static struct fbcon_config *config = NULL;
 #define RGB888_RED              0xff0000
 #define RGB888_GREEN            0x00ff00
 
+#define BGRA8888_BLACK            0x000000ff
+#define BGRA8888_WHITE            0xffffffff
+#define BGRA8888_CYAN             0x00ffffff
+#define BGRA8888_BLUE             0x0000FFFF
+#define BGRA8888_SILVER           0xc0c0c0ff
+#define BGRA8888_YELLOW           0xffff00ff
+#define BGRA8888_ORANGE           0xffa500ff
+#define BGRA8888_RED              0xff0000ff
+#define BGRA8888_GREEN            0x00ff00ff
+
 #define FONT_WIDTH		5
 #define FONT_HEIGHT		12
 
@@ -108,6 +118,16 @@ static struct fb_color		fb_color_formats_888[] = {
 					[FBCON_GREEN_MSG] = {RGB888_GREEN, RGB888_BLACK},
 					[FBCON_SELECT_MSG_BG_COLOR] = {RGB888_WHITE, RGB888_BLUE}};
 
+static struct fb_color		fb_color_formats_bgra8888[] = {
+					[FBCON_COMMON_MSG] = {BGRA8888_WHITE, BGRA8888_BLACK},
+					[FBCON_UNLOCK_TITLE_MSG] = {BGRA8888_CYAN, BGRA8888_BLACK},
+					[FBCON_TITLE_MSG] = {BGRA8888_WHITE, BGRA8888_BLACK},
+					[FBCON_SUBTITLE_MSG] = {BGRA8888_SILVER, BGRA8888_BLACK},
+					[FBCON_YELLOW_MSG] = {BGRA8888_YELLOW, BGRA8888_BLACK},
+					[FBCON_ORANGE_MSG] = {BGRA8888_ORANGE, BGRA8888_BLACK},
+					[FBCON_RED_MSG] = {BGRA8888_RED, BGRA8888_BLACK},
+					[FBCON_GREEN_MSG] = {BGRA8888_GREEN, BGRA8888_BLACK},
+					[FBCON_SELECT_MSG_BG_COLOR] = {BGRA8888_WHITE, BGRA8888_BLUE}};	
 
 static void fbcon_drawglyph(char *pixels, uint32_t paint, unsigned stride,
 			    unsigned bpp, unsigned *glyph, unsigned scale_factor)
@@ -387,9 +407,12 @@ void fbcon_setup(struct fbcon_config *_config)
 	case FB_FORMAT_RGB565:
 		fb_color_formats = fb_color_formats_555;
 		break;
-        case FB_FORMAT_RGB888:
+	case FB_FORMAT_RGB888:
 		fb_color_formats = fb_color_formats_888;
-                break;
+		break;
+	case FB_FORMAT_BGRA8888:
+		fb_color_formats = fb_color_formats_bgra8888;
+		break;
 	default:
 		dprintf(CRITICAL, "unknown framebuffer pixel format\n");
 		ASSERT(0);

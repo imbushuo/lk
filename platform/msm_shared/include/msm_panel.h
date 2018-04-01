@@ -53,6 +53,7 @@
 #define LVDS_PANEL		11	/* LVDS */
 #define EDP_PANEL		12	/* EDP */
 #define QPIC_PANEL		13	/* QPIC */
+#define UEFI_PANEL		14  /* UEFI */
 
 #define DISPLAY_UNKNOWN		0
 #define DISPLAY_1		1

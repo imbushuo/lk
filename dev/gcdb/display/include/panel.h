@@ -48,7 +48,8 @@ enum {
 	PANEL_TYPE_UNKNOWN,
 	PANEL_TYPE_DSI,
 	PANEL_TYPE_EDP,
-	PANEL_TYPE_HDMI
+	PANEL_TYPE_HDMI,
+	PANEL_TYPE_UEFI_FB
 };
 
 /*---------------------------------------------------------------------------*/

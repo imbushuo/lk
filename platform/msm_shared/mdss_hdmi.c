@@ -582,6 +582,11 @@ static uint32_t mdss_hdmi_panel_clock(uint8_t enable, struct msm_panel_info *pin
 	return ret;
 }
 
+static uint32_t mdss_null_panel_clock(uint8_t enable, struct msm_panel_info *pinfo)
+{
+	return NO_ERROR;
+}
+
 static uint32_t  mdss_hdmi_pll_clock(uint8_t enable, struct msm_panel_info *pinfo)
 {
 	int ret = NO_ERROR;
@@ -594,6 +599,11 @@ static uint32_t  mdss_hdmi_pll_clock(uint8_t enable, struct msm_panel_info *pinf
 	hdmi_pll_clock_enabled = enable;
 
 	return ret;
+}
+
+static uint32_t mdss_null_pll_clock(uint8_t enable, struct msm_panel_info *pinfo)
+{
+	return NO_ERROR;
 }
 
 static int mdss_hdmi_enable_power(uint8_t enable, struct msm_panel_info *pinfo)
@@ -626,6 +636,11 @@ bail_gpio_fail:
 
 bail_regulator_fail:
 	return ret;
+}
+
+static int mdss_null_enable_power(uint8_t enable, struct msm_panel_info *pinfo)
+{
+	return NO_ERROR;
 }
 
 static bool mdss_hdmi_is_dvi_mode(void)
@@ -898,6 +913,35 @@ static int mdss_hdmi_update_panel_info(void)
 	return NO_ERROR;
 }
 
+static int mdss_uefi_update_panel_info(void)
+{
+	panel.panel_info.xres = UEFI_FB_HORZ;
+	panel.panel_info.yres = UEFI_FB_HORZ;
+	panel.panel_info.bpp  = 32;
+	panel.panel_info.type = UEFI_PANEL;2
+	panel.panel_info.clk_rate = 0;
+
+	panel.panel_info.lcdc.h_back_porch  = 0;
+	panel.panel_info.lcdc.h_front_porch = 0;
+	panel.panel_info.lcdc.h_pulse_width = 0;
+	panel.panel_info.lcdc.v_back_porch  = 0;
+	panel.panel_info.lcdc.v_front_porch = 0;
+	panel.panel_info.lcdc.v_pulse_width = 0;
+
+	panel.panel_info.lcdc.hsync_skew = 0;
+	panel.panel_info.lcdc.xres_pad   = 0;
+	panel.panel_info.lcdc.yres_pad   = 0;
+	panel.panel_info.lcdc.dual_pipe  = 0;
+
+	panel.fb.width   = UEFI_FB_HORZ;
+	panel.fb.height  = UEFI_FB_VERT;
+	panel.fb.stride  = UEFI_FB_HORZ;
+	panel.fb.bpp     = 32;
+	panel.fb.format  = FB_FORMAT_BGRA8888;
+
+	return NO_ERROR;
+}
+
 void mdss_hdmi_display_init(uint32_t rev, void *base)
 {
 	panel.power_func        = mdss_hdmi_enable_power;
@@ -906,6 +950,19 @@ void mdss_hdmi_display_init(uint32_t rev, void *base)
 	panel.pll_clk_func      = mdss_hdmi_pll_clock;
 
 	panel.fb.base = base;
+	panel.mdp_rev = rev;
+
+	msm_display_init(&panel);
+}
+
+void mdss_uefi_display_init(uint32_t rev)
+{
+	panel.power_func		= mdss_null_enable_power;
+	panel.clk_func			= mdss_null_panel_clock;
+	panel.update_panel_info = mdss_uefi_update_panel_info;
+	panel.pll_clk_func		= mdss_null_pll_clock;
+
+	panel.fb.base = (void*) UEFI_FB_BASE;
 	panel.mdp_rev = rev;
 
 	msm_display_init(&panel);

@@ -44,6 +44,7 @@
 /* GCDB Panel Database                                                       */
 /*---------------------------------------------------------------------------*/
 #include "include/panel_sharp_wqxga_dualdsi_video.h"
+#include "include/panel_sharp_wqhd_dualdsi_video.h"
 #include "include/panel_jdi_qhd_dualdsi_video.h"
 #include "include/panel_jdi_qhd_dualdsi_cmd.h"
 #include "include/panel_jdi_4k_dualdsi_video.h"
@@ -58,6 +59,7 @@
 /*---------------------------------------------------------------------------*/
 enum {
 SHARP_WQXGA_DUALDSI_VIDEO_PANEL,
+SHARP_WQHD_DUALDSI_VIDEO_PANEL,
 JDI_QHD_DUALDSI_VIDEO_PANEL,
 JDI_QHD_DUALDSI_CMD_PANEL,
 JDI_4K_DUALDSI_VIDEO_PANEL,
@@ -66,6 +68,7 @@ SHARP_1080P_CMD_PANEL,
 HX8379A_TRULY_FWVGA_VIDEO_PANEL,
 NOVATEK_WQXGA_VIDEO_PANEL,
 NOVATEK_WQXGA_CMD_PANEL,
+QUALCOMM_UEFI_GOP_FB_PANEL,
 UNKNOWN_PANEL
 };
 
@@ -75,6 +78,7 @@ UNKNOWN_PANEL
  */
 static struct panel_list supp_panels[] = {
 	{"sharp_wqxga_dualdsi_video", SHARP_WQXGA_DUALDSI_VIDEO_PANEL},
+	{"sharp_wqhd_dusldsi_video", SHARP_WQHD_DUALDSI_VIDEO_PANEL},
 	{"jdi_qhd_dualdsi_video", JDI_QHD_DUALDSI_VIDEO_PANEL},
 	{"jdi_qhd_dualdsi_cmd", JDI_QHD_DUALDSI_CMD_PANEL},
 	{"jdi_4k_dualdsi_video", JDI_4K_DUALDSI_VIDEO_PANEL},
@@ -83,6 +87,7 @@ static struct panel_list supp_panels[] = {
 	{"hx8379a_truly_fwvga_video", HX8379A_TRULY_FWVGA_VIDEO_PANEL},
 	{"nt35597_wqxga_video", NOVATEK_WQXGA_VIDEO_PANEL},
 	{"nt35597_wqxga_cmd", NOVATEK_WQXGA_CMD_PANEL},
+	{"uefi_gop", QUALCOMM_UEFI_GOP_FB_PANEL}
 };
 
 static uint32_t panel_id;
@@ -159,6 +164,47 @@ static bool init_panel_data(struct panel_struct *panelstruct,
 		memcpy(phy_db->timing,
 			sharp_wqxga_dualdsi_video_timings, TIMING_SIZE);
 		pinfo->dfps.panel_dfps = sharp_wqxga_dualdsi_video_dfps;
+		pinfo->mipi.tx_eot_append = true;
+		break;
+	case SHARP_WQHD_DUALDSI_VIDEO_PANEL:
+		pan_type = PANEL_TYPE_DSI;
+		pinfo->lcd_reg_en = 0;
+		panelstruct->paneldata    = &sharp_wqhd_dualdsi_video_panel_data;
+		panelstruct->paneldata->panel_operating_mode = 11;
+		panelstruct->paneldata->panel_with_enable_gpio = 0;
+
+		/*
+		 * Even though this panel can be supported with a single pipe,
+		 * enable ping-pong split and use two pipes for simplicity sake.
+		 */
+		if (platform_is_msm8992())
+			panelstruct->paneldata->panel_operating_mode |= DST_SPLIT_FLAG;
+
+		panelstruct->panelres     = &sharp_wqhd_dualdsi_video_panel_res;
+		panelstruct->color        = &sharp_wqhd_dualdsi_video_color;
+		panelstruct->videopanel   = &sharp_wqhd_dualdsi_video_video_panel;
+		panelstruct->commandpanel = &sharp_wqhd_dualdsi_video_command_panel;
+		panelstruct->state        = &sharp_wqhd_dualdsi_video_state;
+		panelstruct->laneconfig   = &sharp_wqhd_dualdsi_video_lane_config;
+		panelstruct->paneltiminginfo
+			= &sharp_wqhd_dualdsi_video_timing_info;
+		panelstruct->panelresetseq
+					 = &sharp_wqhd_dualdsi_video_reset_seq;
+		panelstruct->backlightinfo = &sharp_wqhd_dualdsi_video_backlight;
+
+		pinfo->labibb = &sharp_wqhd_dualdsi_video_labibb;
+
+		pinfo->mipi.panel_on_cmds
+			= sharp_wqhd_dualdsi_video_on_command;
+		pinfo->mipi.num_of_panel_on_cmds
+			= SHARP_WQHD_DUALDSI_VIDEO_ON_COMMAND;
+		pinfo->mipi.panel_off_cmds
+			= sharp_wqhd_dualdsi_video_off_command;
+		pinfo->mipi.num_of_panel_off_cmds
+			= SHARP_WQHD_DUALDSI_VIDEO_OFF_COMMAND;
+		memcpy(phy_db->timing,
+			sharp_wqhd_dualdsi_video_timings, TIMING_SIZE);
+		pinfo->dfps.panel_dfps = sharp_wqhd_dualdsi_video_dfps;
 		pinfo->mipi.tx_eot_append = true;
 		break;
 	case JDI_QHD_DUALDSI_VIDEO_PANEL:
@@ -394,6 +440,9 @@ static bool init_panel_data(struct panel_struct *panelstruct,
 		memcpy(&panelstruct->fbcinfo, &nt35597_wqxga_cmd_fbc,
 				sizeof(struct fb_compression));
 		break;
+	case QUALCOMM_UEFI_GOP_FB_PANEL:
+		pan_type = PANEL_TYPE_UEFI_FB;
+		break;
 	default:
 	case UNKNOWN_PANEL:
 		pan_type = PANEL_TYPE_UNKNOWN;
@@ -406,7 +455,9 @@ int oem_panel_select(const char *panel_name, struct panel_struct *panelstruct,
 			struct msm_panel_info *pinfo,
 			struct mdss_dsi_phy_ctrl *phy_db)
 {
+#ifndef CHAINLOADED_UEFI
 	uint32_t hw_id = board_hardware_id();
+#endif
 	int32_t panel_override_id;
 
 	phy_db->pll_type = DSI_PLL_TYPE_20NM;
@@ -428,11 +479,14 @@ int oem_panel_select(const char *panel_name, struct panel_struct *panelstruct,
 		}
 	}
 
+#ifdef CHAINLOADED_UEFI
+	panel_id = PANEL_TYPE_UEFI_FB;
+#else
 	switch (hw_id) {
 	case HW_PLATFORM_MTP:
 	case HW_PLATFORM_FLUID:
 	case HW_PLATFORM_SURF:
-		panel_id = SHARP_WQXGA_DUALDSI_VIDEO_PANEL;
+		panel_id = SHARP_WQHD_DUALDSI_VIDEO_PANEL;
 		break;
 	case HW_PLATFORM_LIQUID:
 		panel_id = JDI_4K_DUALDSI_VIDEO_PANEL;
@@ -442,6 +496,7 @@ int oem_panel_select(const char *panel_name, struct panel_struct *panelstruct,
 					, hw_id);
 		return PANEL_TYPE_UNKNOWN;
 	}
+#endif
 
 panel_init:
 	if (panel_id == JDI_4K_DUALDSI_VIDEO_PANEL || panel_id == HX8379A_TRULY_FWVGA_VIDEO_PANEL)
