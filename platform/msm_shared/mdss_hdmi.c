@@ -918,7 +918,7 @@ static int mdss_uefi_update_panel_info(void)
 	panel.panel_info.xres = UEFI_FB_HORZ;
 	panel.panel_info.yres = UEFI_FB_HORZ;
 	panel.panel_info.bpp  = 32;
-	panel.panel_info.type = UEFI_PANEL;2
+	panel.panel_info.type = UEFI_PANEL;
 	panel.panel_info.clk_rate = 0;
 
 	panel.panel_info.lcdc.h_back_porch  = 0;
