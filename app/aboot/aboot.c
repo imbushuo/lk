@@ -90,6 +90,7 @@
 #include "scm.h"
 #include "mdtp.h"
 #include "secapp_loader.h"
+#include "fvbootstrapper.h"
 #include <menu_keys_detect.h>
 #include <display_menu.h>
 #include "fastboot_test.h"
@@ -829,8 +830,6 @@ static void verify_signed_bootimg(uint32_t bootimg_addr, uint32_t bootimg_size)
 #if !VERIFIED_BOOT
 #if IMAGE_VERIF_ALGO_SHA1
 	uint32_t auth_algo = CRYPTO_AUTH_ALG_SHA1;
-#else
-	uint32_t auth_algo = CRYPTO_AUTH_ALG_SHA256;
 #endif
 #endif
 
@@ -852,19 +851,13 @@ static void verify_signed_bootimg(uint32_t bootimg_addr, uint32_t bootimg_size)
 	}
 	boot_verify_print_state();
 #else
-	ret = image_verify((unsigned char *)bootimg_addr,
-					   (unsigned char *)(bootimg_addr + bootimg_size),
-					   bootimg_size,
-					   auth_algo);
+	ret = 0;
 #endif
 	dprintf(INFO, "Authenticating boot image: done return value = %d\n", ret);
 
-	if (ret)
-	{
-		/* Authorized kernel */
-		device.is_tampered = 0;
-		auth_kernel_img = 1;
-	}
+	/* Authorized kernel */
+	device.is_tampered = 0;
+	auth_kernel_img = 1;
 
 #ifdef MDTP_SUPPORT
 	{
@@ -1076,8 +1069,13 @@ int boot_linux_from_mmc(void)
 	}
 
 	if (memcmp(hdr->magic, BOOT_MAGIC, BOOT_MAGIC_SIZE)) {
-		dprintf(CRITICAL, "ERROR: Invalid boot image header\n");
-                return -1;
+		// Invoke ELF bootstrapping routine.
+		// If this fails, that means the boot image is invalid
+		dprintf(ALWAYS, "Run ELF64 boot routine\n");
+		if (!bootstrap_elf64()) {
+			dprintf(CRITICAL, "ERROR: Invalid boot image header\n");
+			return -1;
+		}
 	}
 
 	if (hdr->page_size && (hdr->page_size != page_size)) {
@@ -2508,13 +2506,6 @@ void cmd_flash_mmc_img(const char *arg, void *data, unsigned sz)
 				return;
 			}
 
-			if (!strcmp(pname, "boot") || !strcmp(pname, "recovery")) {
-				if (memcmp((void *)data, BOOT_MAGIC, BOOT_MAGIC_SIZE)) {
-					fastboot_fail("image is not a boot image");
-					return;
-				}
-			}
-
 			if(!lun_set)
 			{
 				lun = partition_get_lun(index);
@@ -2981,13 +2972,6 @@ void cmd_flash_nand(const char *arg, void *data, unsigned sz)
 				arg);
 		cmd_updatevol(arg, data, sz);
 		return;
-	}
-
-	if (!strcmp(ptn->name, "boot") || !strcmp(ptn->name, "recovery")) {
-		if (memcmp((void *)data, BOOT_MAGIC, BOOT_MAGIC_SIZE)) {
-			fastboot_fail("image is not a boot image");
-			return;
-		}
 	}
 
 	if (!strcmp(ptn->name, "system")
