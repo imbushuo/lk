@@ -5,6 +5,7 @@
         "platform.h": "c",
         "panel_sharp_wqxga_dualdsi_video.h": "c",
         "mdss_hdmi.h": "c",
-        "font5x12.h": "c"
+        "font5x12.h": "c",
+        "msm_panel.h": "c"
     }
 }

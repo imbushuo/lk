@@ -34,6 +34,7 @@
 #include <msm_panel.h>
 #include <mipi_dsi.h>
 #include <mdss_hdmi.h>
+#include <mdss_efifb.h>
 #include <pm8x41.h>
 #include <pm8x41_wled.h>
 #include <qpnp_wled.h>
