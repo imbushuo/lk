@@ -226,6 +226,10 @@ static void target_mmc_sdhci_init()
 			else
 				config.bus_width = DATA_BUS_WIDTH_8BIT;
 			break;
+		case HW_PLATFORM_CHI:
+			/* WPBlue devices do not have 8bit bus */
+			config.bus_width = DATA_BUS_WIDTH_4BIT;
+			break;
 		default:
 			config.bus_width = DATA_BUS_WIDTH_8BIT;
 	};
@@ -246,20 +250,11 @@ static void target_mmc_sdhci_init()
 	config.sdhc_base = mmc_sdhci_base[config.slot - 1];
 	config.pwrctl_base = mmc_sdc_base[config.slot - 1];
 	config.pwr_irq     = mmc_sdc_pwrctl_irq[config.slot - 1];
-	config.hs400_support = 1;
+	config.hs200_support = 1;
 
 	if (!(dev = mmc_init(&config))) {
-		/* Trying Slot 2 next */
-		config.slot = 2;
-		config.max_clk_rate = MMC_CLK_200MHZ;
-		config.sdhc_base = mmc_sdhci_base[config.slot - 1];
-		config.pwrctl_base = mmc_sdc_base[config.slot - 1];
-		config.pwr_irq     = mmc_sdc_pwrctl_irq[config.slot - 1];
-
-		if (!(dev = mmc_init(&config))) {
-			dprintf(CRITICAL, "mmc init failed!");
-			ASSERT(0);
-		}
+		dprintf(CRITICAL, "mmc init failed!");
+		ASSERT(0);
 	}
 
 	/*
