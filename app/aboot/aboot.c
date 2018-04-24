@@ -1012,6 +1012,7 @@ int boot_linux_from_mmc(void)
 	uint32_t dtb_offset = 0;
 	unsigned char *kernel_start_addr = NULL;
 	unsigned int kernel_size = 0;
+	bool secondary_bootstrap_result = false;
 	int rc;
 
 #if DEVICE_TREE
@@ -1068,11 +1069,15 @@ int boot_linux_from_mmc(void)
                 return -1;
 	}
 
-	if (memcmp(hdr->magic, BOOT_MAGIC, BOOT_MAGIC_SIZE)) {
-		// Invoke ELF bootstrapping routine.
+	if (memcmp(hdr->magic, BOOT_MAGIC, BOOT_MAGIC_SIZE)) {	
+#ifdef ELFBOOTSTRAPPER_ARM64
+		// Invoke ELF bootstrapping routine on supported devices.
 		// If this fails, that means the boot image is invalid
 		dprintf(ALWAYS, "Run ELF64 boot routine\n");
-		if (!bootstrap_elf64()) {
+		secondary_bootstrap_result = bootstrap_elf64();
+#endif
+		// Default is false, if below code is not executed
+		if (!secondary_bootstrap_result) {
 			dprintf(CRITICAL, "ERROR: Invalid boot image header\n");
 			return -1;
 		}

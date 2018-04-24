@@ -133,6 +133,12 @@ int check_fd_addr_range_overlap(uintptr_t start, uint32_t size)
 
 bool bootstrap_elf64(void)
 {
+
+#ifndef ELFBOOTSTRAPPER_ARM64
+    // I believe you don't want to boot ARM64 on ARM32 SoCs, do you
+    goto exit;
+#endif
+
     Elf64_Ehdr *fd_elf64_hdr = (void*) fd_elf_hdr_buf;
     Elf64_Phdr *fd_elf64_pg_hdr = (void*) NULL;
 
