@@ -33,6 +33,7 @@
 #include <qtimer.h>
 #include <string.h>
 #include <msm_panel.h>
+#include <mdss_efifb.h>
 #include <mipi_dsi.h>
 #include <pm8x41.h>
 #include <pm8x41_wled.h>
@@ -419,6 +420,10 @@ bool target_display_panel_node(char *pbuf, uint16_t buf_size)
 
 void target_display_init(const char *panel_name)
 {
+	#if CHAINLOADED_UEFI
+	mdss_uefi_display_init(MDP_REV_50);
+	return;
+	#else
 	uint32_t hw_id = board_hardware_id();
 	uint32_t panel_loop = 0;
 	int ret = 0;
@@ -479,10 +484,14 @@ void target_display_init(const char *panel_name)
 		dprintf(INFO, "Forcing continuous splash disable\n");
 		target_force_cont_splash_disable(true);
 	}
+	#endif
 }
 
 void target_display_shutdown(void)
 {
+	#if CHAINLOADED_UEFI
+	return;
+	#else
 	uint32_t hw_id = board_hardware_id();
 	switch (hw_id) {
 	case HW_PLATFORM_LIQUID:
@@ -493,4 +502,5 @@ void target_display_shutdown(void)
 		gcdb_display_shutdown();
 		break;
 	}
+	#endif
 }
