@@ -91,7 +91,7 @@ void mdss_uefi_display_init(uint32_t rev)
 {
 	writel(UEFI_FB_BASE, MDP_VP_0_RGB_0_BASE + PIPE_SSPP_SRC0_ADDR);
 	writel(1, MDP_CTL_0_BASE + CTL_FLUSH);
-    writel(1, MDP_CTL_1_BASE + CTL_FLUSH); 
+	writel(1, MDP_CTL_1_BASE + CTL_FLUSH); 
 	
 	panel.power_func		= mdss_uefi_enable_power;
 	panel.clk_func			= mdss_uefi_panel_clock;
