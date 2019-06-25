@@ -10,3 +10,4 @@ target/*/tools/mkheader
 cscope.*
 ncscope.*
 
+.vscode
